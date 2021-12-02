@@ -34,7 +34,7 @@ async def func(client : Client, data : Union[Message, CallbackQuery]):
         update_fn = data.message.reply_text
     else:
         return False
-    
+
     if STATUS.ARIA2_API:
         aria2_api = STATUS.ARIA2_API
         try:
@@ -49,12 +49,11 @@ async def func(client : Client, data : Union[Message, CallbackQuery]):
         except Exception as e:
             LOGGER.warn(str(e))
             await update_fn(str(e))
-    else:
-        if type(data) is Message:
-            try:
-                await data.delete()
-            except:
-                pass
+    elif type(data) is Message:
+        try:
+            await data.delete()
+        except:
+            pass
                 
 @Client.on_callback_query(Filters.create(lambda _, query: query.data.startswith(COMMAND.CANCEL_LEECH)))
 async def func2(*args, **kwargs):

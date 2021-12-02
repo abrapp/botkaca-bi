@@ -28,7 +28,7 @@ async def func(client : Client, message: Message):
         except:
             pass
         return
-        
+
     reply = await message.reply_text(LOCAL.ARIA2_CHECKING_LINK)
     download_dir = os_path_join(CONFIG.ROOT, CONFIG.ARIA2_DIR)
     STATUS.ARIA2_API = STATUS.ARIA2_API or aria2.aria2(
@@ -52,14 +52,12 @@ async def func(client : Client, message: Message):
             await reply.edit_text(
                 LOCAL.ARIA2_NO_URI
             )
-            return
         else:
             LOGGER.error(str(e))
             await reply.edit_text(
                 str(e)
             )
-            return
-
+        return
     if await progress_dl(reply, aria2_api, download.gid):
         download = aria2_api.get_download(download.gid)
         if not download.followed_by_ids:
@@ -106,12 +104,14 @@ async def progress_dl(message : Message, aria2_api : aria2.aria2, gid : int, pre
         download = aria2_api.get_download(gid)
         if not download.is_complete:
             if not download.error_message:
-                block = ""
-                for i in range(1, int(CONFIG.BAR_SIZE) + 1):
-                    if i <= floor(download.progress * int(CONFIG.BAR_SIZE)/100):
-                        block += LOCAL.BLOCK_FILLED
-                    else:
-                        block += LOCAL.BLOCK_EMPTY
+                block = "".join(
+                    LOCAL.BLOCK_FILLED
+                    if i
+                    <= floor(download.progress * int(CONFIG.BAR_SIZE) / 100)
+                    else LOCAL.BLOCK_EMPTY
+                    for i in range(1, int(CONFIG.BAR_SIZE) + 1)
+                )
+
                 text = LOCAL.ARIA2_DOWNLOAD_STATUS.format(
                     name = download.name,
                     block = block,
@@ -131,7 +131,7 @@ async def progress_dl(message : Message, aria2_api : aria2.aria2, gid : int, pre
                                 InlineKeyboardButton(
                                     COMMAND.CANCEL_LEECH,
                                     callback_data=COMMAND.CANCEL_LEECH + " " + download.gid,
-                                    
+
                                 )
                             ]])
                     )
@@ -149,7 +149,6 @@ async def progress_dl(message : Message, aria2_api : aria2.aria2, gid : int, pre
     except Exception as e:
         if " not found" in str(e) or "'file'" in str(e):
             await message.delete()
-            return False
         elif " depth exceeded" in str(e):
             download.remove(force=True)
             await message.edit(
@@ -157,8 +156,7 @@ async def progress_dl(message : Message, aria2_api : aria2.aria2, gid : int, pre
                     name = download.name
                 )
             )
-            return False
         else:
             LOGGER.exception(str(e))
             await message.edit("<u>error</u> :\n<code>{}</code>".format(str(e)))
-            return False
+        return False
